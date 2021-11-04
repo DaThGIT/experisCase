@@ -10,7 +10,13 @@ class ExperisCase {
                 List<Product> products = readProducts();                    // data structure containing all product objects
 //              printProducts(products);                                    // test print products
                 Set<String> popularProducts = popList(products, users);     // solve problem 1
-                printPopularProducts(popularProducts);                      // print solution to problem 1            
+//              printPopularProducts(popularProducts);                      // print solution to problem 1            
+                Map<User, Integer> userRequests = currentUserRequests(users);
+                for ( Map.Entry<User, Integer> entry : userRequests.entrySet()) {
+                        System.out.println("\nName: " + entry.getKey().getName());
+                        handleRequest(entry.getKey(), entry.getValue(), products);
+                        System.out.println("\n");
+                    }
             } catch (Exception e) {
                 System.out.println("error " + e + " occurred");
             }           
@@ -69,15 +75,43 @@ class ExperisCase {
     }
 
     // Recommended products:
-
-
-
-
+    private static Set<String> handleRequest(User user, int id, List<Product> products){
+            Set<String> res = new HashSet<>();
+            Set<String> keywords = new HashSet<>();
+                for (Product product : products) {
+                    if (id == product.getId()) keywords = product.getKeywords();
+                }
+            List<Product> relatedProducts = new LinkedList<>();    
+                for (String string : keywords) {
+                    for (Product product : products) {
+                         if (product.getKeywords().contains(string)) relatedProducts.add(product);    
+                    }
+                }
+            for (Product product : relatedProducts) {
+                System.out.println(product.getOGName());
+            }   
+    
+            return res;         
+    }
+    private static Map<User, Integer> currentUserRequests(List<User> users) throws IOException {
+        Map<User, Integer> res = new HashMap<>();
+        File file = new File("C:\\Users\\david\\Desktop\\experisCase\\experisCase\\Movie_product_data\\CurrentUserSession.txt");
+        BufferedReader br = new BufferedReader(new FileReader(file));
+        String st;
+            while ((st = br.readLine()) != null) {
+                    String[] currentUser = removeWS(st).split(",");
+                        for (User user: users) {
+                             if (Integer.parseInt(currentUser[0]) == user.getId()) res.put(user, Integer.parseInt(currentUser[1]));
+                        }
+            }      
+        br.close();
+        return res;
+    }
 
     // Data reading:  
     // Products     
     private static List<Product> readProducts() throws IOException {
-            File file = new File("C:\\Users\\david\\Desktop\\experisCase\\Movie_product_data\\Products.txt");
+            File file = new File("C:\\Users\\david\\Desktop\\experisCase\\experisCase\\Movie_product_data\\Products.txt");
             BufferedReader br = new BufferedReader(new FileReader(file));
             String st;
             List<Product> products = new LinkedList<>();
@@ -107,7 +141,7 @@ class ExperisCase {
     
     // Users
     private static List<User> readUsers() throws IOException {
-            File file = new File("C:\\Users\\david\\Desktop\\experisCase\\Movie_product_data\\Users.txt");
+            File file = new File("C:\\Users\\david\\Desktop\\experisCase\\experisCase\\Movie_product_data\\Users.txt");
             BufferedReader br = new BufferedReader(new FileReader(file));
             String st;
             List<User> users = new LinkedList<>();
