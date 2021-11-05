@@ -5,50 +5,50 @@ class ExperisCase {
         // Running the code, calling the functions, testing the data.     
         public static void main(String[] args) {
             try {
-                List<User> users = readUsers();                             // data structure containing all user objects
-//              printUsers(users);                                          // test print users
-                List<Product> products = readProducts();                    // data structure containing all product objects
-//              printProducts(products);                                    // test print products
-                Set<String> popularProducts = popList(products, users);     // solve problem 1
-//              printPopularProducts(popularProducts);                      // print solution to problem 1            
-                Map<User, Integer> userRequests = currentUserRequests(users);
-                for ( Map.Entry<User, Integer> entry : userRequests.entrySet()) {
-                        System.out.println("\nName: " + entry.getKey().getName());
-                        handleRequest(entry.getKey(), entry.getValue(), products);
-                        System.out.println("\n");
-                    }
-            } catch (Exception e) {
-                System.out.println("error " + e + " occurred");
-            }           
+                    solveProblems();
+            } catch (IOException e) {
+                System.out.println("oops something went wrong\n" + e + " chrased the program :///");
+            }
+                
         }
 
-
+    // Solution    
+    private static void solveProblems() throws IOException {
+                        List<User> users = readUsers();                             // data structure containing all user objects
+        //              printUsers(users);                                          // test-print users
+                        List<Product> products = readProducts();                    // data structure containing all product objects
+        //              printProducts(products);                                    // test-print products
+                        System.out.println("\nProblem 1 Solution: \n");
+                        printPopularProducts(popList(products, users));             // solve and print solution to problem 1 
+                        System.out.println("\nProblem 2 Solution: \n");
+                        printUserRec(collectUserRec(users, products));              // solve and print solution to problem 2
+    }    
 
     // User suggestions:
     // popular products:
     private static Set<String> popList(List<Product> products, List<User> users){
-        Set<String> res = new HashSet<>();
-        List<Product> genreHRP = genreHRP(products);
-        String st;
-            for (Product HRP : genreHRP) {
-                if (productPurchaseRate(HRP.getId(), users) > 0){
-                    st = "Name: " + HRP.getOGName() + "\nRating: " + HRP.getRating() + "\nPrice: " + HRP.getPrice();
-                    res.add(st);         
-                }    
-            }
-        return res;    
+            Set<String> res = new HashSet<>();
+            List<Product> genreHRP = genreHRPpopList(products);
+            String st;
+                for (Product HRP : genreHRP) {
+                    if (productPurchaseRate(HRP.getId(), users) > 0){
+                        st = "Name: " + HRP.getOGName() + "\nRating: " + HRP.getRating() + "\nPrice: " + HRP.getPrice();
+                        res.add(st);         
+                    }    
+                }
+            return res;    
     }
-    private static List<Product> genreHRP(List<Product> products){
-       List<Product> res = new LinkedList<>(); 
-       Set<String> genres = getCategorySet(products);
-       for (String string : genres) {
-            List<Product> movies = new ArrayList<>(); 
-            for (Product product : products) {
-                    if(product.getKeywords().contains(string)) movies.add(product); 
-            }
-            res.add(highestRatedProduct(movies));           
-       }
-       return res;
+    private static List<Product> genreHRPpopList(List<Product> products){
+            List<Product> res = new LinkedList<>(); 
+            Set<String> genres = getCategorySet(products);
+                for (String string : genres) {
+                    List<Product> movies = new ArrayList<>(); 
+                    for (Product product : products) {
+                        if (product.getKeywords().contains(string)) movies.add(product); 
+                    }
+                    res.add(highestRatedProduct(movies));           
+                }
+            return res;
     }
     private static Product highestRatedProduct(List<Product> products){
             Product res = products.get(0);
@@ -61,7 +61,7 @@ class ExperisCase {
         int res = 0;
             for (User user : users) {
                 for (int id : user.getPurchased()) {
-                     if(id == itemId) res++;
+                     if (id == itemId) res++;
                 }
             } 
         return res;
@@ -75,8 +75,26 @@ class ExperisCase {
     }
 
     // Recommended products:
-    private static Set<String> handleRequest(User user, int id, List<Product> products){
-            Set<String> res = new HashSet<>();
+    private static Map<User, List<String>> collectUserRec(List<User> users, List<Product> products) throws IOException {
+            Map<User, List<String>> res = new HashMap<>();
+            Map<User, Integer> userRequests = currentUserRequests(users);
+                for (Map.Entry<User, Integer> entry : userRequests.entrySet()) {
+                     res.put(entry.getKey(), userRecList(handleRequest(entry.getKey(), entry.getValue(), products, users)));                     
+                }
+            return res;
+    }
+
+    private static List<String> userRecList(Set<Product> products){
+            List<String> res = new LinkedList<>();
+            String st;
+                for (Product product : products) {
+                    st = "Name: " + product.getOGName() + "\nRating: " + product.getRating() + "\nPrice: " + product.getPrice();
+                    res.add(st);
+                }
+            return res;
+    } 
+    private static Set<Product> handleRequest(User user, int id, List<Product> products, List<User> users){
+            Set<Product> res = new HashSet<>();
             Set<String> keywords = new HashSet<>();
                 for (Product product : products) {
                     if (id == product.getId()) keywords = product.getKeywords();
@@ -84,28 +102,37 @@ class ExperisCase {
             List<Product> relatedProducts = new LinkedList<>();    
                 for (String string : keywords) {
                     for (Product product : products) {
-                         if (product.getKeywords().contains(string)) relatedProducts.add(product);    
+                         if (((product.getKeywords().contains(string)) && !(user.getViewed().contains(product.getId())))
+                               && !(user.getPurchased().contains(product.getId()))) relatedProducts.add(product);    
                     }
                 }
-            for (Product product : relatedProducts) {
-                System.out.println(product.getOGName());
-            }   
-    
+            res.addAll(genreHRPUserRec(relatedProducts, keywords)); 
             return res;         
     }
+    private static List<Product> genreHRPUserRec(List<Product> products, Set<String> keywords){
+            List<Product> res = new LinkedList<>();
+                for (String string : keywords) {
+                    List<Product> movies = new LinkedList<>();
+                    for (Product product : products) {
+                        if (product.getKeywords().contains(string)) movies.add(product);
+                    }
+                    res.add(highestRatedProduct(movies));
+                }
+            return res; 
+    }
     private static Map<User, Integer> currentUserRequests(List<User> users) throws IOException {
-        Map<User, Integer> res = new HashMap<>();
-        File file = new File("C:\\Users\\david\\Desktop\\experisCase\\experisCase\\Movie_product_data\\CurrentUserSession.txt");
-        BufferedReader br = new BufferedReader(new FileReader(file));
-        String st;
-            while ((st = br.readLine()) != null) {
+            Map<User, Integer> res = new HashMap<>();
+            File file = new File("C:\\Users\\david\\Desktop\\experisCase\\experisCase\\Movie_product_data\\CurrentUserSession.txt");
+            BufferedReader br = new BufferedReader(new FileReader(file));
+            String st;
+                while ((st = br.readLine()) != null) {
                     String[] currentUser = removeWS(st).split(",");
                         for (User user: users) {
                              if (Integer.parseInt(currentUser[0]) == user.getId()) res.put(user, Integer.parseInt(currentUser[1]));
                         }
-            }      
-        br.close();
-        return res;
+                }      
+            br.close();
+            return res;
     }
 
     // Data reading:  
@@ -128,12 +155,12 @@ class ExperisCase {
     }
     private static Product createProduct(String[] productData, String OGname){
             Set<String> keywords = new HashSet<>();
-            for (int i = 3; i < 8; i++) {
-                if(productData[i].length() > 0){
-                    String st = productData[i];
-                    keywords.add(st);
-                } 
-            }
+                for (int i = 3; i < 8; i++) {
+                    if (productData[i].length() > 0){
+                        String st = productData[i];
+                        keywords.add(st);
+                    } 
+                }
             Product product = new Product(Integer.parseInt(productData[0]), OGname, productData[1], Integer.parseInt(productData[2]),
                                           Double.parseDouble(productData[8]), Integer.parseInt(productData[9]), keywords);
             return product;
@@ -206,7 +233,17 @@ class ExperisCase {
             System.out.println(string);
             System.out.println();
         }
-    }    
+    }
+    private static void printUserRec(Map<User, List<String>> userRec){
+        for (Map.Entry<User, List<String>> entry : userRec.entrySet()) {
+            System.out.println("\n");
+            System.out.println("User name: " + entry.getKey().getName() + " || user id " + entry.getKey().getId() + "\n");
+            System.out.println("recommendations: ");
+                for (String recommendation : entry.getValue()) {
+                    System.out.print("\n" + recommendation + "\n");
+                }
+        }
+    }   
 }
 
 // structure of data: 
