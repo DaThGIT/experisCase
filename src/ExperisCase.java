@@ -1,13 +1,34 @@
+/*
+*      @author: David Thomsen 
+*               davidThomsen216@gmail.com
+*               https://github.com/DaThGIT/experisCase code source
+*
+*      Movie suggestion program, written as a test-case during a recruting process with Experis Academy.
+*      Basically reads in a database of users and products as per a pre specified .txt format(see movie_product_data folder).
+*           
+*           - Problem 1: 
+*                            Consists of creating a general list of recommendations.
+*                            The program achieves this by computing a list of the highest rated movie in each genre,
+*                            then picking out the movies that has a product purchase rate(sum of purchases across the userbase)
+*                            larger than 0 (movies which have been bought more than one time). These choices are then printed as recommendations. 
+*           - Problem 2: 
+*                            Consists of giving movie recommendations based on a single viewed it from the product database.
+*                            The idea is here, that a currentUserSession file is read, and from that the program should recommend movies
+*                            that relate to that single movie a single user is viewing. 
+*                            The program achieves this by computing, for each user in the currentUserSession file, a list of movies
+*                            that the user currently has not viewed or purchased, and share a single shared genre with the movie currently being viewed.
+*                            The highest rated movie in each shared genre is computed, and these choices are printed as recommendations.   
+*/              
 import java.io.*;
 import java.util.*;
 
 class ExperisCase {
-        // Running the code, calling the functions, testing the data.     
+        // Running the code, calling the functions, testing the data, solving the given problems.     
         public static void main(String[] args) {
             try {
                     solveProblems();
             } catch (IOException e) {
-                System.out.println("oops something went wrong\n" + e + " chrased the program :///");
+                System.out.println("oops something went wrong\n" + e + " ruined the program :///");
             }
                 
         }
@@ -83,7 +104,6 @@ class ExperisCase {
                 }
             return res;
     }
-
     private static List<String> userRecList(Set<Product> products){
             List<String> res = new LinkedList<>();
             String st;
@@ -237,7 +257,7 @@ class ExperisCase {
     private static void printUserRec(Map<User, List<String>> userRec){
         for (Map.Entry<User, List<String>> entry : userRec.entrySet()) {
             System.out.println("\n");
-            System.out.println("User name: " + entry.getKey().getName() + " || user id " + entry.getKey().getId() + "\n");
+            System.out.println("Username: " + entry.getKey().getName() + " || user id " + entry.getKey().getId() + "\n");
             System.out.println("recommendations: ");
                 for (String recommendation : entry.getValue()) {
                     System.out.print("\n" + recommendation + "\n");
